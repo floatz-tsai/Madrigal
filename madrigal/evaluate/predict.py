@@ -10,6 +10,17 @@ from .evaluate import evaluate_ft
 from .eval_utils import K
 from .metrics import get_metrics
 
+def get_device():
+    """Automatically detect the best available device."""
+    if torch.cuda.is_available():
+        return "cuda"
+    elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        return "mps"
+    else:
+        return "cpu"
+
+
+DEFAULT_DEVICE = get_device()
 
 @torch.no_grad()
 def test(best_epoch, best_within_epoch, test_loaders, loss_fn, task, finetune_mode, output_dir, split_method, label_map, device, logger, wandb=None):
@@ -378,7 +389,7 @@ def sigmoid(x: np.ndarray):
 #     return single_scores, outcome_twosides_inds_in_onsides, outcome_twosides_names_in_onsides
 
 
-def get_twosides_scores_for_all_pairs_among_drugs(twosides_ddi_classes, drug_indices: Union[List[int], np.ndarray], checkpoint_dir: str, drug_group_str: str = "selected", epoch: int = None, eval_type: str = "full_full", device: str = "cuda", all_outcomes: bool = True, outcome_twosides_inds = None):
+def get_twosides_scores_for_all_pairs_among_drugs(twosides_ddi_classes, drug_indices: Union[List[int], np.ndarray], checkpoint_dir: str, drug_group_str: str = "selected", epoch: int = None, eval_type: str = "full_full", device: str = DEFAULT_DEVICE, all_outcomes: bool = True, outcome_twosides_inds = None):
     """ Interface for generating TWOSIDES predictions for all pairs between a batch of drugs across outcomes, given embeddings
     """
     import pickle
@@ -480,7 +491,7 @@ def get_twosides_scores_wrapper(outcome_twosides_inds, drug_inds, drug_group_str
                 drug_group_str = drug_group_str, 
                 epoch = epoch, 
                 eval_type = eval_type, 
-                device = "cuda",
+                device = DEFAULT_DEVICE,
                 all_outcomes = all_outcomes,
                 outcome_twosides_inds = outcome_twosides_inds,
             )
@@ -499,7 +510,7 @@ def get_twosides_scores_wrapper(outcome_twosides_inds, drug_inds, drug_group_str
         return combo_twosides_scores_dict
 
 
-def get_drugbank_scores_for_all_pairs_among_drugs(drugbank_ddi_classes, drug_indices: Union[List[int], np.ndarray], checkpoint_dir: str, drug_group_str: str = "selected", epoch: int = None, eval_type: str = "full_full", device: str = "cuda", all_outcomes: bool = True, outcome_drugbank_inds = None):
+def get_drugbank_scores_for_all_pairs_among_drugs(drugbank_ddi_classes, drug_indices: Union[List[int], np.ndarray], checkpoint_dir: str, drug_group_str: str = "selected", epoch: int = None, eval_type: str = "full_full", device: str = DEFAULT_DEVICE, all_outcomes: bool = True, outcome_drugbank_inds = None):
     """ Interface for generating DrugBank predictions for all pairs between a batch of drugs across outcomes, given embeddings
     """
     import pickle
@@ -599,12 +610,12 @@ def get_drugbank_scores_wrapper(outcome_drugbank_inds, drug_inds, ckpt_list, dru
         else:
             combo_drugbank_scores = get_drugbank_scores_for_all_pairs_among_drugs(
                 drugbank_ddi_classes = drugbank_ddi_classes,
-                drug_indices = drug_inds, 
-                checkpoint_dir = checkpoint_dir, 
-                drug_group_str = drug_group_str, 
-                epoch = epoch, 
-                eval_type = eval_type, 
-                device = "cuda",
+                drug_indices = drug_inds,
+                checkpoint_dir = checkpoint_dir,
+                drug_group_str = drug_group_str,
+                epoch = epoch,
+                eval_type = eval_type,
+                device = DEFAULT_DEVICE,
                 outcome_drugbank_inds = outcome_drugbank_inds,
             )
         combo_drugbank_scores_dict[checkpoint] = combo_drugbank_scores
